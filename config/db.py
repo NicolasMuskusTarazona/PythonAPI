@@ -10,7 +10,7 @@ conn = MongoClient(MONGO_URI)
 try:
     db = conn.get_default_database()
     # solo para testear
-    print("Conexion MongoDB OK. Colecciones:", db.list_collection_names())
+    print("Conexion MongoDB OK. Colecciones:")
 except Exception as e:
-    print("❌ Error al conectar MongoDB:", e)
+    print("Error al conectar MongoDB:", e)
     raise e
