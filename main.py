@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+
 import os
 import uvicorn
 
@@ -15,13 +17,23 @@ from Handler.CustomErrorHandler import (
 
 from utils.create_admin import create_admin
 
+
 app = FastAPI(
     title="CodeGeass API",
     description="API desarrollada por Nicolas Muskus con FastAPI y MongoDB",
     version="1.0.0",
 )
 
-# Endpoint 
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Endpoint raiz
 @app.get("/")
 def root():
     return {"message": "CodeGeass API running"}
@@ -31,7 +43,7 @@ app.add_exception_handler(HTTPException, custom_http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
-# Crear admin si no existe
+# Crear admin
 create_admin()
 
 # ROUTERS
