@@ -1,9 +1,9 @@
 # fast api
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Response, status, HTTPException, Depends
 # database mongodb
 from config.db import conn
 # GET BY ID and GET ALL
-from schemas.user import userEntity,usersEntity
+from schemas.user import userEntity, usersEntity
 # MODEL USER
 from models.user import User
 # CRYPT PASSWORD USERS
@@ -12,41 +12,39 @@ from passlib.hash import sha256_crypt
 from bson import ObjectId
 # HTTP STATUS
 from starlette.status import *
+# Auth dependencies
+from dependencies.auth import get_current_admin
 
 user = APIRouter()
 
-# GET ALL
+# GET ALL 
 @user.get('/users', response_model=list[User], tags=["users"])
-def get_all_users():
-    return usersEntity(conn.local.user.find())
+def get_all_users(current_user: dict = Depends(get_current_admin)):
+    return usersEntity(conn.mydb.user.find())
 
+# GET BY ID 
+@user.get('/users/{id}', response_model=User, tags=["users"])
+def get_id_users(id: str, current_user: dict = Depends(get_current_admin)):
+    return userEntity(conn.mydb.user.find_one({"_id": ObjectId(id)}))
 
-# GET BY ID
-@user.get('/users/{id}', response_model= User, tags=["users"])
-def get_id_users(id:str):
-    return userEntity(conn.local.user.find_one({"_id": ObjectId (id)}))
-
-
-# POST
+# POST ( CREA LA CUENTA )
 @user.post('/users', response_model=User, tags=["users"])
 def post_users(user: User):
     new_user = dict(user)
     new_user["password"] = sha256_crypt.encrypt(new_user["password"])
-    id = conn.local.user.insert_one(new_user).inserted_id
-
-    user_created = conn.local.user.find_one({"_id": id})
-
+    new_user["role"] = "user"
+    id = conn.mydb.user.insert_one(new_user).inserted_id
+    user_created = conn.mydb.user.find_one({"_id": id})
     return userEntity(user_created)
 
-
-# PUT
-@user.put('/users/{id}',response_model= User, tags=["users"])
-def put_users(id:str, user: User):
-    conn.local.user.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(user)})
-    return userEntity(conn.local.user.find_one({"_id": ObjectId(id)}))
+# PUT 
+@user.put('/users/{id}', response_model=User, tags=["users"])
+def put_users(id: str, user: User, current_user: dict = Depends(get_current_admin)):
+    conn.mydb.user.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(user)})
+    return userEntity(conn.mydb.user.find_one({"_id": ObjectId(id)}))
 
 # DELETE
 @user.delete('/users/{id}', status_code=HTTP_204_NO_CONTENT, tags=["users"])
-def delete_users(id: str):
-    userEntity(conn.local.user.find_one_and_delete({"_id": ObjectId (id)}))
+def delete_users(id: str, current_user: dict = Depends(get_current_admin)):
+    userEntity(conn.mydb.user.find_one_and_delete({"_id": ObjectId(id)}))
     return Response(status_code=HTTP_204_NO_CONTENT)
