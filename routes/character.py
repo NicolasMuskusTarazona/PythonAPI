@@ -4,8 +4,9 @@ from fastapi import APIRouter, Response, status, HTTPException, Depends
 from config.db import db
 # GET BY ID and GET ALL
 from schemas.character import characterEntity, charactersEntity
-# MODEL Characters
+# MODEL Characters and CharactersUpdate
 from models.character import Character
+from models.character_update import CharacterUpdate
 # EASY METHOD ( GET BY ID , DELETE and PUT)
 from bson import ObjectId
 # HTTP STATUS
@@ -35,14 +36,19 @@ def post_characters(character: Character):
 
 # PUT
 @character.put('/characters/{id}', response_model=Character, tags=["characters"])
-def put_characters(id: str, characters: Character):
+def put_characters(id: str, characters: CharacterUpdate):
+
+    update_data = {k: v for k, v in characters.dict().items() if v is not None}
+
     put_character = db.character.find_one_and_update(
-        {"_id": ObjectId(id)}, {"$set": dict(characters)}
+        {"_id": ObjectId(id)},
+        {"$set": update_data}
     )
+
     if put_character is None:
         raise HTTPException(status_code=404, detail="Character not found")
-    return characterEntity(db.character.find_one({"_id": ObjectId(id)}))
 
+    return characterEntity(db.character.find_one({"_id": ObjectId(id)}))
 # DELETE 
 @character.delete('/characters/{id}', status_code=status.HTTP_200_OK, tags=["characters"])
 def delete_characters(id: str, current_user: dict = Depends(get_current_admin)):
