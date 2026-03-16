@@ -5,6 +5,6 @@ import os
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
-conn = MongoClient(MONGO_URI)
+db = MongoClient(MONGO_URI)
 
-db = conn.get_default_database()
+db = db["mydb"]

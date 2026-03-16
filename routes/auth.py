@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from config.db import conn
+from config.db import db
 from passlib.hash import sha256_crypt
 from utils.jwt_manager import create_access_token
 from models.auth import LoginData
@@ -9,7 +9,7 @@ auth = APIRouter()
 # ACCESO CUENTA
 @auth.post("/login", tags=["auth"])
 def login(data: LoginData):
-    user = conn.mydb.users.find_one({"email": data.email})
+    user = db.users.find_one({"email": data.email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
