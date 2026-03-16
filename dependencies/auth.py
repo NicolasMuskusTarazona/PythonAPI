@@ -19,7 +19,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
         # Buscar usuario en DB
-        user = db.users.find_one({"_id": ObjectId(user_id)})
+        user = db.user.find_one({"_id": ObjectId(user_id)})
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
