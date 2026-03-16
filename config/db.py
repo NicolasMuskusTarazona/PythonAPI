@@ -2,7 +2,9 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # carga variables de .env
+load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
 conn = MongoClient(MONGO_URI)
+
+db = conn.get_default_database()

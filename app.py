@@ -10,6 +10,8 @@ from Handler.CustomErrorHandler import (
 )
 from utils.create_admin import create_admin
 from routes.auth import auth
+import os
+import uvicorn
 
 app = FastAPI(
     title="FastAPI and Mongodb",
@@ -29,3 +31,7 @@ create_admin()
 app.include_router(user)
 app.include_router(character)
 app.include_router(auth)
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
