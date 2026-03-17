@@ -27,15 +27,25 @@ def get_all_users(current_user: dict = Depends(get_current_admin)):
 def get_id_users(id: str, current_user: dict = Depends(get_current_admin)):
     return userEntity(db.user.find_one({"_id": ObjectId(id)}))
 
-# POST ( CREA LA CUENTA )
+# POST (CREA LA CUENTA)
 @user.post('/users', response_model=User, tags=["users"])
 def post_users(user: User):
+    existing_user = db.user.find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
     new_user = dict(user)
-    new_user["password"] = sha256_crypt.encrypt(new_user["password"])
+    new_user["password"] = sha256_crypt.hash(new_user["password"])  # hash seguro
     new_user["role"] = "user"
-    id = db.user.insert_one(new_user).inserted_id
+
+    try:
+        id = db.user.insert_one(new_user).inserted_id
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error creating user")
+
     user_created = db.user.find_one({"_id": id})
     return userEntity(user_created)
+
 
 # PUT 
 @user.put('/users/{id}', response_model=User, tags=["users"])

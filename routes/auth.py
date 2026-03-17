@@ -10,12 +10,10 @@ auth = APIRouter()
 @auth.post("/login", tags=["auth"])
 def login(data: LoginData):
     user = db.user.find_one({"email": data.email})
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if not sha256_crypt.verify(data.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid password")
-
+    
+    if user is None or not sha256_crypt.verify(data.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
     token = create_access_token({
         "id": str(user["_id"]),
         "role": user["role"]
